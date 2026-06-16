@@ -1,10 +1,9 @@
-package com.example.demo.notification.controller;
+package com.example.demo.notification;
 
 import com.example.demo.notification.dto.CreateNotificationRequest;
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.example.demo.notification.dto.UpdateNotificationRequest;
-import com.example.demo.notification.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

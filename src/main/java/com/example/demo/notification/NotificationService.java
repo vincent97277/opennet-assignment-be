@@ -1,13 +1,11 @@
-package com.example.demo.notification.service;
+package com.example.demo.notification;
 
-import com.example.demo.notification.domain.Notification;
 import com.example.demo.notification.dto.CreateNotificationRequest;
 import com.example.demo.notification.dto.NotificationMessage;
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.example.demo.notification.dto.UpdateNotificationRequest;
 import com.example.demo.notification.exception.NotificationNotFoundException;
-import com.example.demo.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +18,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationCacheService notificationCacheService;
-    private final NotificationMessagePublisher notificationMessagePublisher;
+    private final NotificationPublisher notificationPublisher;
 
     @Transactional
     public NotificationResponse create(CreateNotificationRequest request) {
@@ -33,7 +31,7 @@ public class NotificationService {
         Notification saved = notificationRepository.saveAndFlush(notification);
         NotificationResponse response = NotificationResponse.from(saved);
 
-        notificationMessagePublisher.publish(NotificationMessage.from(response));
+        notificationPublisher.publish(NotificationMessage.from(response));
         notificationCacheService.cacheCreated(response);
 
         return response;

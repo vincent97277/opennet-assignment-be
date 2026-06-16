@@ -1,4 +1,4 @@
-package com.example.demo.notification.domain;
+package com.example.demo.notification;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

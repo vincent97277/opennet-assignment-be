@@ -1,4 +1,4 @@
-package com.example.demo.notification.service;
+package com.example.demo.notification;
 
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;

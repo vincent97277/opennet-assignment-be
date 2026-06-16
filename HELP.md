@@ -1,23 +1,65 @@
 # Notification Service Help
 
+This project is a Spring Boot demo for creating, reading, updating, and deleting
+notifications. It uses MySQL for persistence, Redis for notification cache, and
+RocketMQ for publishing created notification messages.
+
 ## Prerequisites
 
 - Java 21+
-- Docker Desktop or another Docker-compatible runtime
+- Docker Desktop or another Docker-compatible runtime with Docker Compose
 
-## Start Dependencies
+Check your local tools:
 
 ```bash
-docker-compose up -d
+java -version
+docker compose version
 ```
 
-Services:
+The app runs on `http://localhost:8080` by default.
+
+## Quick Start
+
+```bash
+docker compose up -d
+./mvnw spring-boot:run
+```
+
+After the application starts, create a notification:
+
+```bash
+curl -i -X POST http://localhost:8080/notifications \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "type": "email",
+    "recipient": "user@example.com",
+    "subject": "Welcome!",
+    "content": "Thanks for signing up!"
+  }'
+```
+
+Then confirm it is persisted:
+
+```bash
+curl -i http://localhost:8080/notifications/1
+curl -i http://localhost:8080/notifications/recent
+```
+
+## Docker Services
+
+`docker compose up -d` starts:
 
 - MySQL: `localhost:3306`
 - Redis: `localhost:6379`
 - RocketMQ nameserver: `localhost:9876`
 - RocketMQ broker: `localhost:10911`
 - RocketMQ console: `http://localhost:8088`
+
+Use this to check container state:
+
+```bash
+docker compose ps
+```
 
 Note: `rocketmq-namesrv` may show `unhealthy` in `docker compose ps` even when
 the nameserver is running. The current healthcheck uses HTTP `curl` against
@@ -26,11 +68,21 @@ HTTP endpoint. If the container log includes `The Name Server boot success` and
 the app can connect through `localhost:9876`, treat this as a healthcheck false
 negative.
 
+```bash
+docker compose logs rocketmq-namesrv
+```
+
 The MySQL container loads `init.sql` on first startup and creates the
-`notifications` table.
+`notifications` table. Docker only runs files in `/docker-entrypoint-initdb.d`
+when the MySQL data directory is empty.
 
 If you started the MySQL container before `init.sql` contained the table, recreate
 the MySQL volume before testing the app with Docker.
+
+```bash
+docker compose down -v
+docker compose up -d
+```
 
 ## Run the Application
 
@@ -43,6 +95,13 @@ Default application configuration is in `src/main/resources/application.yaml`:
 - MySQL database: `taskdb`
 - MySQL user/password: `taskuser` / `taskpass`
 - RocketMQ topic: `notification-topic`
+
+If port `8080` is already in use, stop the conflicting process or run with a
+temporary port:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+```
 
 ## API Examples
 
@@ -107,6 +166,18 @@ curl -i -X DELETE http://localhost:8080/notifications/1
 ./mvnw test
 ```
 
-The automated tests are fast layered tests: controller validation/status mapping
-and service behavior around persistence, Redis cache calls, and RocketMQ publish
-failure handling.
+The automated tests do not require Docker. They are fast controller/service/cache
+tests that cover validation/status mapping, persistence orchestration, Redis
+cache behavior, and RocketMQ publish failure handling through mocks.
+
+## Stop Everything
+
+```bash
+docker compose down
+```
+
+To also remove MySQL and Redis data volumes:
+
+```bash
+docker compose down -v
+```

@@ -1,7 +1,7 @@
 package com.example.demo.notification.dto;
 
-import com.example.demo.notification.domain.Notification;
-import com.example.demo.notification.domain.NotificationType;
+import com.example.demo.notification.Notification;
+import com.example.demo.notification.NotificationType;
 
 import java.time.Instant;
 
