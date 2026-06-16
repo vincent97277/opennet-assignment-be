@@ -19,6 +19,13 @@ Services:
 - RocketMQ broker: `localhost:10911`
 - RocketMQ console: `http://localhost:8088`
 
+Note: `rocketmq-namesrv` may show `unhealthy` in `docker compose ps` even when
+the nameserver is running. The current healthcheck uses HTTP `curl` against
+port `9876`, but RocketMQ nameserver listens on a TCP remoting protocol, not an
+HTTP endpoint. If the container log includes `The Name Server boot success` and
+the app can connect through `localhost:9876`, treat this as a healthcheck false
+negative.
+
 The MySQL container loads `init.sql` on first startup and creates the
 `notifications` table.
 
