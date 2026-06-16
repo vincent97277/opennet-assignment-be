@@ -53,23 +53,12 @@ curl -i http://localhost:8080/notifications/recent
 - Notification service: `http://localhost:8080`
 - RocketMQ nameserver: `localhost:9876`
 - RocketMQ broker: `localhost:10911`
-- RocketMQ console: `http://localhost:8088/#/message`
+- RocketMQ dashboard: `http://localhost:8088`
 
 Use this to check container state:
 
 ```bash
 docker compose ps
-```
-
-Note: `rocketmq-namesrv` may show `unhealthy` in `docker compose ps` even when
-the nameserver is running. The current healthcheck uses HTTP `curl` against
-port `9876`, but RocketMQ nameserver listens on a TCP remoting protocol, not an
-HTTP endpoint. If the container log includes `The Name Server boot success` and
-the app can connect through `localhost:9876`, treat this as a healthcheck false
-negative.
-
-```bash
-docker compose logs rocketmq-namesrv
 ```
 
 The MySQL container loads `init.sql` on first startup and creates the
@@ -92,9 +81,9 @@ The recommended path is the full Docker Compose runtime:
 docker compose up -d --build
 ```
 
-This keeps the Spring Boot app, RocketMQ broker, and RocketMQ console on the same
-Docker network. The broker advertises itself as `rocketmq-broker`, so the console
-can connect to it and inspect messages in `notification-topic`.
+This keeps the Spring Boot app, RocketMQ broker, and RocketMQ dashboard on the
+same Docker network. The broker advertises itself as `rocketmq-broker`, so the
+dashboard can connect to it and inspect messages in `notification-topic`.
 
 Running the app directly on the host is useful for local Java debugging, but it
 is not the recommended demo path while the broker advertises the Docker hostname:
@@ -103,7 +92,7 @@ is not the recommended demo path while the broker advertises the Docker hostname
 ./mvnw spring-boot:run
 ```
 
-If you run the app on the host, RocketMQ console visibility may differ because
+If you run the app on the host, RocketMQ dashboard visibility may differ because
 host processes and Docker containers resolve broker addresses differently.
 
 Default application configuration is in `src/main/resources/application.yaml`:
@@ -185,6 +174,18 @@ curl -i -X DELETE http://localhost:8080/notifications/1
 The automated tests do not require Docker. They are fast controller/service/cache
 tests that cover validation/status mapping, persistence orchestration, Redis
 cache behavior, and RocketMQ publish failure handling through mocks.
+
+## RocketMQ Verification
+
+After creating a notification, verify that RocketMQ received it:
+
+```bash
+docker exec rocketmq-broker sh -lc \
+  'cd /home/rocketmq/rocketmq-5.1.4 && sh bin/mqadmin topicStatus -n rocketmq-namesrv:9876 -t notification-topic'
+```
+
+Open the dashboard at `http://localhost:8088` and use the message query for
+`notification-topic`.
 
 ## Stop Everything
 
