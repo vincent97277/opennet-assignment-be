@@ -1,11 +1,11 @@
-package com.example.demo.notification;
+package com.example.demo.notification.service;
 
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class NotificationCacheService {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationCacheService.class);
     private static final Duration NOTIFICATION_TTL = Duration.ofMinutes(10);
     private static final String NOTIFICATION_KEY_PREFIX = "notification:";
     private static final String RECENT_KEY = "notifications:recent";
@@ -25,11 +26,6 @@ public class NotificationCacheService {
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
-
-    public NotificationCacheService(StringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
-        this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
-    }
 
     public Optional<NotificationResponse> findById(Long id) {
         try {
@@ -62,7 +58,7 @@ public class NotificationCacheService {
             List<RecentNotificationResponse> recent = new ArrayList<>();
             for (String value : values) {
                 NotificationResponse response = objectMapper.readValue(value, NotificationResponse.class);
-                recent.add(NotificationService.toRecentResponse(response));
+                recent.add(RecentNotificationResponse.from(response));
             }
             return recent;
         } catch (Exception ex) {
@@ -85,7 +81,7 @@ public class NotificationCacheService {
         }
     }
 
-    public void addRecent(NotificationResponse response) {
+    public void cacheCreated(NotificationResponse response) {
         try {
             put(response);
             String id = response.id().toString();
@@ -93,7 +89,7 @@ public class NotificationCacheService {
             redisTemplate.opsForList().leftPush(RECENT_KEY, id);
             redisTemplate.opsForList().trim(RECENT_KEY, 0, RECENT_LIMIT - 1);
         } catch (Exception ex) {
-            log.warn("Unable to update recent notification cache for {}", response.id(), ex);
+            log.warn("Unable to cache created notification {}", response.id(), ex);
         }
     }
 

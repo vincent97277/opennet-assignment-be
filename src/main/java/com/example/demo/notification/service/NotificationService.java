@@ -1,32 +1,26 @@
-package com.example.demo.notification;
+package com.example.demo.notification.service;
 
+import com.example.demo.notification.domain.Notification;
 import com.example.demo.notification.dto.CreateNotificationRequest;
 import com.example.demo.notification.dto.NotificationMessage;
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.example.demo.notification.dto.UpdateNotificationRequest;
 import com.example.demo.notification.exception.NotificationNotFoundException;
+import com.example.demo.notification.repository.NotificationRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationCacheService notificationCacheService;
     private final NotificationMessagePublisher notificationMessagePublisher;
-
-    public NotificationService(
-            NotificationRepository notificationRepository,
-            NotificationCacheService notificationCacheService,
-            NotificationMessagePublisher notificationMessagePublisher
-    ) {
-        this.notificationRepository = notificationRepository;
-        this.notificationCacheService = notificationCacheService;
-        this.notificationMessagePublisher = notificationMessagePublisher;
-    }
 
     @Transactional
     public NotificationResponse create(CreateNotificationRequest request) {
@@ -37,11 +31,10 @@ public class NotificationService {
                 request.content()
         );
         Notification saved = notificationRepository.saveAndFlush(notification);
-        NotificationResponse response = toResponse(saved);
+        NotificationResponse response = NotificationResponse.from(saved);
 
         notificationMessagePublisher.publish(NotificationMessage.from(response));
-        notificationCacheService.put(response);
-        notificationCacheService.addRecent(response);
+        notificationCacheService.cacheCreated(response);
 
         return response;
     }
@@ -52,7 +45,7 @@ public class NotificationService {
                 .orElseGet(() -> {
                     Notification notification = notificationRepository.findById(id)
                             .orElseThrow(() -> new NotificationNotFoundException(id));
-                    NotificationResponse response = toResponse(notification);
+                    NotificationResponse response = NotificationResponse.from(notification);
                     notificationCacheService.put(response);
                     return response;
                 });
@@ -67,11 +60,11 @@ public class NotificationService {
 
         List<NotificationResponse> responses = notificationRepository.findTop10ByOrderByCreatedAtDescIdDesc()
                 .stream()
-                .map(NotificationService::toResponse)
+                .map(NotificationResponse::from)
                 .toList();
         notificationCacheService.replaceRecent(responses);
         return responses.stream()
-                .map(NotificationService::toRecentResponse)
+                .map(RecentNotificationResponse::from)
                 .toList();
     }
 
@@ -80,7 +73,7 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new NotificationNotFoundException(id));
         notification.update(request.subject(), request.content());
-        NotificationResponse response = toResponse(notification);
+        NotificationResponse response = NotificationResponse.from(notification);
 
         notificationCacheService.put(response);
         notificationCacheService.evictRecent();
@@ -96,27 +89,5 @@ public class NotificationService {
         notificationRepository.flush();
         notificationCacheService.evict(id);
         notificationCacheService.evictRecent();
-    }
-
-    static NotificationResponse toResponse(Notification notification) {
-        return new NotificationResponse(
-                notification.getId(),
-                notification.getType(),
-                notification.getRecipient(),
-                notification.getSubject(),
-                notification.getContent(),
-                notification.getCreatedAt(),
-                notification.getUpdatedAt()
-        );
-    }
-
-    static RecentNotificationResponse toRecentResponse(NotificationResponse response) {
-        return new RecentNotificationResponse(
-                response.id(),
-                response.type(),
-                response.recipient(),
-                response.subject(),
-                response.createdAt()
-        );
     }
 }

@@ -1,5 +1,6 @@
-package com.example.demo.notification;
+package com.example.demo.notification.service;
 
+import com.example.demo.notification.domain.NotificationType;
 import com.example.demo.notification.dto.NotificationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -55,11 +56,11 @@ class NotificationCacheServiceTest {
     }
 
     @Test
-    void addRecentMovesIdToFrontAndTrimsListToTen() {
+    void cacheCreatedStoresNotificationAndMovesIdToFront() {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(redisTemplate.opsForList()).thenReturn(listOperations);
 
-        notificationCacheService.addRecent(response(123L));
+        notificationCacheService.cacheCreated(response(123L));
 
         verify(listOperations).remove("notifications:recent", 0, "123");
         verify(listOperations).leftPush("notifications:recent", "123");

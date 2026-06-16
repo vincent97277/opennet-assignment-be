@@ -1,11 +1,13 @@
-package com.example.demo.notification;
+package com.example.demo.notification.controller;
 
+import com.example.demo.notification.domain.NotificationType;
 import com.example.demo.notification.dto.CreateNotificationRequest;
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.example.demo.notification.dto.UpdateNotificationRequest;
 import com.example.demo.notification.exception.NotificationDeliveryException;
 import com.example.demo.notification.exception.NotificationNotFoundException;
+import com.example.demo.notification.service.NotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

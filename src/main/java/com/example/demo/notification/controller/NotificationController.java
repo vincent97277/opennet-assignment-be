@@ -1,10 +1,12 @@
-package com.example.demo.notification;
+package com.example.demo.notification.controller;
 
 import com.example.demo.notification.dto.CreateNotificationRequest;
 import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.example.demo.notification.dto.UpdateNotificationRequest;
+import com.example.demo.notification.service.NotificationService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,13 +22,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/notifications")
+@RequiredArgsConstructor
 public class NotificationController {
 
     private final NotificationService notificationService;
-
-    public NotificationController(NotificationService notificationService) {
-        this.notificationService = notificationService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

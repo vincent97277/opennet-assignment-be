@@ -1,5 +1,6 @@
-package com.example.demo.notification;
+package com.example.demo.notification.repository;
 
+import com.example.demo.notification.domain.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

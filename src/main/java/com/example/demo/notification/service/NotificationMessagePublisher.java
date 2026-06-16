@@ -1,4 +1,4 @@
-package com.example.demo.notification;
+package com.example.demo.notification.service;
 
 import com.example.demo.notification.dto.NotificationMessage;
 import com.example.demo.notification.exception.NotificationDeliveryException;

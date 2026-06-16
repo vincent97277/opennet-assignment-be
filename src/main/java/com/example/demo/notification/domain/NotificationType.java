@@ -1,4 +1,4 @@
-package com.example.demo.notification;
+package com.example.demo.notification.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

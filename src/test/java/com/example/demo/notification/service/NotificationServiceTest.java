@@ -1,5 +1,7 @@
-package com.example.demo.notification;
+package com.example.demo.notification.service;
 
+import com.example.demo.notification.domain.Notification;
+import com.example.demo.notification.domain.NotificationType;
 import com.example.demo.notification.dto.CreateNotificationRequest;
 import com.example.demo.notification.dto.NotificationMessage;
 import com.example.demo.notification.dto.NotificationResponse;
@@ -7,12 +9,14 @@ import com.example.demo.notification.dto.RecentNotificationResponse;
 import com.example.demo.notification.dto.UpdateNotificationRequest;
 import com.example.demo.notification.exception.NotificationDeliveryException;
 import com.example.demo.notification.exception.NotificationNotFoundException;
+import com.example.demo.notification.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -67,8 +71,7 @@ class NotificationServiceTest {
         ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
         verify(notificationMessagePublisher).publish(messageCaptor.capture());
         assertThat(messageCaptor.getValue().id()).isEqualTo(123L);
-        verify(notificationCacheService).put(response);
-        verify(notificationCacheService).addRecent(response);
+        verify(notificationCacheService).cacheCreated(response);
     }
 
     @Test
@@ -86,8 +89,7 @@ class NotificationServiceTest {
                 "Thanks"
         ))).isInstanceOf(NotificationDeliveryException.class);
 
-        verify(notificationCacheService, never()).put(any(NotificationResponse.class));
-        verify(notificationCacheService, never()).addRecent(any(NotificationResponse.class));
+        verify(notificationCacheService, never()).cacheCreated(any(NotificationResponse.class));
     }
 
     @Test
@@ -149,7 +151,7 @@ class NotificationServiceTest {
 
         assertThat(recent).hasSize(1);
         assertThat(recent.get(0).id()).isEqualTo(123L);
-        verify(notificationCacheService).replaceRecent(List.of(NotificationService.toResponse(notification)));
+        verify(notificationCacheService).replaceRecent(List.of(NotificationResponse.from(notification)));
     }
 
     @Test
@@ -201,9 +203,9 @@ class NotificationServiceTest {
 
     private Notification notification(Long id, NotificationType type, String subject, String content) {
         Notification notification = new Notification(type, "user@example.com", subject, content);
-        notification.setId(id);
-        notification.setCreatedAt(Instant.parse("2025-07-15T12:01:02Z"));
-        notification.setUpdatedAt(Instant.parse("2025-07-15T12:01:02Z"));
+        ReflectionTestUtils.setField(notification, "id", id);
+        ReflectionTestUtils.setField(notification, "createdAt", Instant.parse("2025-07-15T12:01:02Z"));
+        ReflectionTestUtils.setField(notification, "updatedAt", Instant.parse("2025-07-15T12:01:02Z"));
         return notification;
     }
 

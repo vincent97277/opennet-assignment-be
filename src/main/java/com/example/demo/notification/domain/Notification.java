@@ -1,4 +1,4 @@
-package com.example.demo.notification;
+package com.example.demo.notification.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,9 +12,14 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
         name = "notifications",
@@ -46,9 +51,6 @@ public class Notification {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected Notification() {
-    }
-
     public Notification(NotificationType type, String recipient, String subject, String content) {
         this.type = type;
         this.recipient = recipient;
@@ -72,45 +74,5 @@ public class Notification {
         this.subject = subject;
         this.content = content;
         this.updatedAt = Instant.now();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    public NotificationType getType() {
-        return type;
-    }
-
-    public String getRecipient() {
-        return recipient;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
