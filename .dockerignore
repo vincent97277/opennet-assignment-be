@@ -1,0 +1,6 @@
+.git
+.gstack
+.idea
+target
+.DS_Store
+*.log

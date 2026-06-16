@@ -28,6 +28,28 @@ services:
     volumes:
       - redis_data:/data
 
+  app:
+    build: .
+    container_name: notification-service
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rocketmq-broker:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/taskdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: taskuser
+      SPRING_DATASOURCE_PASSWORD: taskpass
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      NOTIFICATION_ROCKETMQ_TOPIC: notification-topic
+
   rocketmq-namesrv:
     image: apache/rocketmq:5.1.4
     container_name: rocketmq-namesrv
@@ -37,7 +59,7 @@ services:
       JAVA_OPT_EXT: "-Xms256m -Xmx256m -Xmn128m"
     command: sh mqnamesrv
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9876"]
+      test: ["CMD-SHELL", "timeout 3 bash -lc '</dev/tcp/localhost/9876'"]
       interval: 15s
       timeout: 10s
       retries: 5

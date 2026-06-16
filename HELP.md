@@ -21,8 +21,7 @@ The app runs on `http://localhost:8080` by default.
 ## Quick Start
 
 ```bash
-docker compose up -d
-./mvnw spring-boot:run
+docker compose up -d --build
 ```
 
 After the application starts, create a notification:
@@ -51,9 +50,10 @@ curl -i http://localhost:8080/notifications/recent
 
 - MySQL: `localhost:3306`
 - Redis: `localhost:6379`
+- Notification service: `http://localhost:8080`
 - RocketMQ nameserver: `localhost:9876`
 - RocketMQ broker: `localhost:10911`
-- RocketMQ console: `http://localhost:8088`
+- RocketMQ console: `http://localhost:8088/#/message`
 
 Use this to check container state:
 
@@ -86,9 +86,25 @@ docker compose up -d
 
 ## Run the Application
 
+The recommended path is the full Docker Compose runtime:
+
+```bash
+docker compose up -d --build
+```
+
+This keeps the Spring Boot app, RocketMQ broker, and RocketMQ console on the same
+Docker network. The broker advertises itself as `rocketmq-broker`, so the console
+can connect to it and inspect messages in `notification-topic`.
+
+Running the app directly on the host is useful for local Java debugging, but it
+is not the recommended demo path while the broker advertises the Docker hostname:
+
 ```bash
 ./mvnw spring-boot:run
 ```
+
+If you run the app on the host, RocketMQ console visibility may differ because
+host processes and Docker containers resolve broker addresses differently.
 
 Default application configuration is in `src/main/resources/application.yaml`:
 
