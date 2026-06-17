@@ -1,6 +1,9 @@
 README.md
 target/
 .mvn/wrapper/maven-wrapper.jar
+docs/*
+!docs/adr/
+!docs/adr/**
 !**/src/main/**/target/
 !**/src/test/**/target/
 
