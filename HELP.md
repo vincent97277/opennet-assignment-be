@@ -21,7 +21,8 @@ The app runs on `http://localhost:8080` by default.
 ## Quick Start
 
 ```bash
-docker compose up -d --build
+docker compose up -d
+./mvnw spring-boot:run
 ```
 
 After the application starts, create a notification:
@@ -46,14 +47,13 @@ curl -i http://localhost:8080/notifications/recent
 
 ## Docker Services
 
-`docker compose up -d` starts:
+`docker compose up -d` starts the default host development dependencies:
 
 - MySQL: `localhost:3306`
 - Redis: `localhost:6379`
-- Notification service: `http://localhost:8080`
 - RocketMQ nameserver: `localhost:9876`
 - RocketMQ broker: `localhost:10911`
-- RocketMQ dashboard: `http://localhost:8088`
+- RocketMQ console: `http://localhost:8088/#/message`
 
 Use this to check container state:
 
@@ -75,25 +75,22 @@ docker compose up -d
 
 ## Run the Application
 
-The recommended path is the full Docker Compose runtime:
+The default development path matches the assignment README: run dependencies in
+Docker, then run Spring Boot on the host.
 
 ```bash
-docker compose up -d --build
-```
-
-This keeps the Spring Boot app, RocketMQ broker, and RocketMQ dashboard on the
-same Docker network. The broker advertises itself as `rocketmq-broker`, so the
-dashboard can connect to it and inspect messages in `notification-topic`.
-
-Running the app directly on the host is useful for local Java debugging, but it
-is not the recommended demo path while the broker advertises the Docker hostname:
-
-```bash
+docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-If you run the app on the host, RocketMQ dashboard visibility may differ because
-host processes and Docker containers resolve broker addresses differently.
+This mode uses the default `broker.conf`, which advertises the RocketMQ broker as
+`127.0.0.1:10911`. That address is reachable by the host Java process after
+Docker publishes the broker port.
+
+The RocketMQ console container is also started on `http://localhost:8088` to
+match the assignment environment list. In host development mode, prefer
+`mqadmin` for message verification because the broker route is optimized for the
+host Java process. Use full Docker mode when you need console message lookup.
 
 Default application configuration is in `src/main/resources/application.yaml`:
 
@@ -106,6 +103,29 @@ temporary port:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+```
+
+If you have Maven installed locally, `mvn spring-boot:run` also works.
+
+## Full Docker Mode
+
+Use the full Docker mode when you want the Spring Boot app and RocketMQ console
+to run inside Docker:
+
+```bash
+docker compose -f docker-compose.full.yaml up -d --build
+```
+
+This mode uses `broker.docker.conf`, which advertises the broker as
+`rocketmq-broker:10911` so Docker containers can resolve the broker route.
+RocketMQ console is available at `http://localhost:8088/#/message` in this mode.
+
+Do not run the default host development mode and full Docker mode at the same
+time. Stop one mode before starting the other:
+
+```bash
+docker compose down
+docker compose -f docker-compose.full.yaml down
 ```
 
 ## API Examples
@@ -184,13 +204,22 @@ docker exec rocketmq-broker sh -lc \
   'cd /home/rocketmq/rocketmq-5.1.4 && sh bin/mqadmin topicStatus -n rocketmq-namesrv:9876 -t notification-topic'
 ```
 
-Open the dashboard at `http://localhost:8088` and use the message query for
+In full Docker mode, you can also open the console at
+`http://localhost:8088/#/message` and use the message query for
 `notification-topic`.
 
 ## Stop Everything
 
+For the default host development mode:
+
 ```bash
 docker compose down
+```
+
+For full Docker mode:
+
+```bash
+docker compose -f docker-compose.full.yaml down
 ```
 
 To also remove MySQL and Redis data volumes:
