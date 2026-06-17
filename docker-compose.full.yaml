@@ -28,6 +28,28 @@ services:
     volumes:
       - redis_data:/data
 
+  app:
+    build: .
+    container_name: notification-service
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rocketmq-broker:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/taskdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: taskuser
+      SPRING_DATASOURCE_PASSWORD: taskpass
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      NOTIFICATION_ROCKETMQ_TOPIC: notification-topic
+
   rocketmq-namesrv:
     image: apache/rocketmq:5.1.4
     container_name: rocketmq-namesrv
@@ -54,7 +76,7 @@ services:
       NAMESRV_ADDR: rocketmq-namesrv:9876
       JAVA_OPT_EXT: "-Xms512m -Xmx512m -Xmn256m"
     volumes:
-      - ./broker.conf:/home/rocketmq/rocketmq-5.1.4/conf/broker.conf
+      - ./broker.docker.conf:/home/rocketmq/rocketmq-5.1.4/conf/broker.conf
     command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.4/conf/broker.conf
 
   rocketmq-console:
@@ -65,8 +87,6 @@ services:
       - "8088:8080"
     environment:
       JAVA_OPTS: "-Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - rocketmq-namesrv
 
